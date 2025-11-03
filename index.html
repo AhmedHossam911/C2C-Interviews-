@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Graduation Projects Doctors</title>
+    <link rel="stylesheet" href="CSS/Main CSS/Main.css" />
+    <link rel="stylesheet" href="CSS/Screens CSS/Main.css" />
+    <link rel="stylesheet" href="CSS/Normalize.css" />
+  </head>
+
+  <body>
+    <div class="login-container">
+      <h2>C2C Interviews System</h2>
+      <div class="img">
+        <img src="img/Logo.png"
+          alt="Logo"
+          onerror="this.style.display='none'"
+        />
+      </div>
+      <div class="input-group">
+        <input type="text" id="searchId" placeholder="Enter ID" />
+      </div>
+      <button onclick="searchSheet()">Search</button>
+      <br />
+      <a
+        target="_blank"
+        style="
+          color: black;
+          text-decoration: none;
+          text-align: center;
+          font-size: larger;
+        "
+        href="mailto:c2c.bis.helwan@gmail.com"
+        >Have a problem? Contact us</a
+      >
+      <p class="copyright">&copy; 2025 <span>C2C</span> All Right Reserved</p>
+    </div>
+
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="modal-close-btn">&times;</span>
+          <h2 id="modal-title">Modal Title</h2>
+        </div>
+        <div class="modal-body">
+          <p id="modal-text">Some text in the Modal Body</p>
+
+          <div id="modal-loader" class="loader" style="display: none"></div>
+
+          <div id="modal-details" style="display: none"></div>
+        </div>
+        <div class="modal-footer">
+          <div class="flex-btn">
+
+            <button
+            id="modal-btn-confirm"
+            class="modal-btn confirm"
+            style="display: none"
+          >
+            Confirm (تأكيد)
+          </button>
+
+          <button
+            id="modal-btn-cancel"
+            class="modal-btn cancel"
+            style="display: none"
+          >
+            Cancel (إلغاء)
+          </button>
+
+          <button id="modal-btn-ok" class="modal-btn ok" style="display: none">
+            OK
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // !! تأكد أن هذا هو رابط "النشر الجديد" (New Deployment) الصحيح
+      const webAppUrl =
+        "https://script.google.com/macros/s/AKfycbxqMQSkfGoUq48bsNOlcyFeW73YTSM0e2mbo7K40ZXS9Vb8iNFTUP-BfQujJPBgDOwsuw/exec";
+
+      // --- Modal Element References ---
+      const modal = document.getElementById("myModal");
+      const modalTitle = document.getElementById("modal-title");
+      const modalText = document.getElementById("modal-text");
+      const modalLoader = document.getElementById("modal-loader");
+      const modalDetails = document.getElementById("modal-details");
+      const modalBtnConfirm = document.getElementById("modal-btn-confirm");
+      const modalBtnCancel = document.getElementById("modal-btn-cancel");
+      const modalBtnOk = document.getElementById("modal-btn-ok");
+      const modalCloseBtn =
+        document.getElementsByClassName("modal-close-btn")[0];
+
+      // --- Store data between search and confirm ---
+      let currentSearchData = {};
+
+      // --- Modal Control Functions ---
+
+      /** Hides the modal and resets all its components */
+      function hideModal() {
+        modal.style.display = "none";
+
+        // Hide all optional components
+        modalLoader.style.display = "none";
+        modalText.style.display = "none";
+        modalDetails.style.display = "none";
+        modalBtnConfirm.style.display = "none";
+        modalBtnCancel.style.display = "none";
+        modalBtnOk.style.display = "none";
+
+        // Clear dynamic content
+        modalText.textContent = "";
+        modalDetails.innerHTML = "";
+
+        // Clear stored data
+        currentSearchData = {};
+      }
+
+      /**
+       * Shows and configures the modal based on type.
+       * @param {string} type - 'alert', 'loading', or 'confirmation'
+       * @param {string} title - The text for the modal header
+       * @param {string} text - The text for the modal body
+       * @param {string} [detailsHtml] - (Optional) HTML string for confirmation details
+       */
+      function showModal(type, title, text, detailsHtml = null) {
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        modalText.style.display = "block";
+
+        if (type === "alert") {
+          modalBtnOk.style.display = "inline-block";
+        } else if (type === "loading") {
+          modalLoader.style.display = "block";
+        } else if (type === "confirmation") {
+          modalDetails.innerHTML = detailsHtml;
+          modalDetails.style.display = "block";
+          modalBtnConfirm.style.display = "inline-block";
+          modalBtnCancel.style.display = "inline-block";
+        }
+
+        modal.style.display = "block";
+      }
+
+      // --- Modal Event Listeners ---
+      modalCloseBtn.onclick = hideModal;
+      modalBtnCancel.onclick = hideModal;
+      modalBtnOk.onclick = hideModal;
+
+      // Close modal if user clicks on the background overlay
+      window.onclick = function (event) {
+        if (event.target == modal) {
+          hideModal();
+        }
+      };
+
+      /**
+       * Main search function (Step 1: GET data)
+       * Triggered by the "Search" button
+       */
+      async function searchSheet() {
+        const searchId = String(
+          document.getElementById("searchId").value.trim()
+        );
+
+        if (!searchId) {
+          showModal("alert", "Warning", "Please enter an ID to search.");
+          return;
+        }
+
+        // Show loading modal
+        showModal("loading", "Searching...", "Please wait");
+
+        try {
+          // الخطوة 1: البحث عن الطالب (GET)
+          const testResponse = await fetch(webAppUrl + "?id=" + searchId, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
+
+          if (!testResponse.ok) {
+            throw new Error(`HTTP error! status: ${testResponse.status}`);
+          }
+
+          const result = await testResponse.json();
+
+          if (result.error) {
+            throw new Error(
+              result.error === "Not Found"
+                ? "No matching ID found."
+                : result.error
+            );
+          }
+
+          // Save data for the confirmation step
+          currentSearchData = { id: searchId, result: result };
+
+          // Hide loading modal
+          hideModal();
+
+          // الخطوة 2: إظهار نافذة التأكيد
+          const detailsHtml = `
+                  <strong>Full Name:</strong> ${result.fullName || "N/A"} <br>
+                  <hr>
+                  <strong>Day:</strong> ${result.day || "N/A"} <br>
+                  <strong>Time:</strong> ${result.time || "N/A"} <br>
+                  <strong>Room:</strong> ${result.room || "N/A"} <br><br>
+              `;
+
+          showModal(
+            "confirmation",
+            "Interview Schedule",
+            "Please confirm your attendance for this interview or request a change",
+            detailsHtml
+          );
+        } catch (error) {
+          // إظهار أي خطأ يحدث أثناء البحث
+          console.error("Error:", error);
+          hideModal(); // Close loading modal
+          showModal(
+            "alert",
+            "Error",
+            error.message || "An error occurred while processing your request."
+          );
+        }
+      }
+
+      /**
+       * Confirmation function (Step 2: POST data)
+       * Triggered by the "Confirm" button on the modal
+       */
+      modalBtnConfirm.onclick = async () => {
+        // Show loading modal
+        showModal("loading", "Confirming...", "Please wait");
+
+        try {
+          // الخطوة 3: إرسال التأكيد (POST)
+          const response = await fetch(webAppUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              id: currentSearchData.id, // Use the saved ID
+              action: "confirm_attendance",
+            }),
+          });
+          console.log(currentSearchData.id)
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              `HTTP error! status: ${response.status}, ${errorText}`
+            );
+          }
+
+          const result = await response.json();
+          if (result.error) {
+            throw new Error(result.error);
+          }
+
+          // الخطوة 4: إظهار رسالة النجاح
+          hideModal(); // Close loading modal
+          showModal(
+            "alert",
+            "Success!",
+            "Your appointment has been confirmed successfully."
+          );
+        } catch (error) {
+          console.error("Confirmation error:", error);
+          hideModal(); // Close loading modal
+          showModal("alert", "Confirmation Failed", error.message);
+        }
+      };
+    </script>
+  </body>
+</html>
